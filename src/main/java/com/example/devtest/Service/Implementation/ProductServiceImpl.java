@@ -4,35 +4,61 @@ import com.example.devtest.DTO.Request.ProductRequestDTO;
 import com.example.devtest.DTO.Response.ProductResponseDTO;
 import com.example.devtest.Model.Product;
 import com.example.devtest.Repository.IProductRepository;
-import com.example.devtest.Service.Abstraction.ICreateProductService;
-import com.example.devtest.Service.Abstraction.IDeleteProductService;
-import com.example.devtest.Service.Abstraction.IGetProductService;
-import com.example.devtest.Service.Abstraction.IUpdateProductService;
+import com.example.devtest.Service.Abstraction.*;
 import com.example.devtest.Utils.ConvertUtils;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ProductServiceImpl implements ICreateProductService, IDeleteProductService, IGetProductService, IUpdateProductService {
+@RequiredArgsConstructor
+public class ProductServiceImpl implements IGetProductService, ICRUDService<ProductResponseDTO, ProductRequestDTO> {
+    private final IProductRepository productRepository;
 
-    @Autowired
-    private IProductRepository productRepository;
+    private final ConvertUtils convertUtils;
 
-    @Autowired
-    private ConvertUtils convertUtils;
-    public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
+    @Override
+    public ProductResponseDTO create(ProductRequestDTO productRequestDTO) {
         Product product = convertUtils.convertToProduct(productRequestDTO);
         product = productRepository.save(product);
         ProductResponseDTO productResponseDTO = convertUtils.convertToProductResponseDTO(product);
         return productResponseDTO;
     }
+    @Override
+    public ProductResponseDTO update(Long id, ProductRequestDTO productRequestDTO) {
+        Optional<Product> product = productRepository.findById(id);
+        if (product.isPresent()) {
+            Product productToUpdate = product.get();
+            productToUpdate.setName(productRequestDTO.getName());
+            productToUpdate.setDescription(productRequestDTO.getDescription());
+            productToUpdate.setPrice(productRequestDTO.getPrice());
+            productToUpdate.setQuantity(productRequestDTO.getQuantity());
+            productToUpdate = productRepository.save(productToUpdate);
+            ProductResponseDTO productResponseDTOToUpdate = convertUtils.convertToProductResponseDTO(productToUpdate);
+            return productResponseDTOToUpdate;
+        }
+        throw new EntityNotFoundException("Product with id: " + id + " not found");
+    }
+    @Override
+    public List<ProductResponseDTO> findAll() {
+        List<Product> products = productRepository.findAll();
+        List<ProductResponseDTO> productResponseDTOS = products
+                .stream()
+                .map(product ->
+                        convertUtils.convertToProductResponseDTO(product))
+                .toList();
+        if(productResponseDTOS.isEmpty())
+            throw new EntityNotFoundException("No products found");
+        return productResponseDTOS;
+    }
+
+
 
     @Override
-    public void deleteProductById(Long id) {
+    public void deleteById(Long id) {
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()) {
             productRepository.deleteById(id);
@@ -42,7 +68,7 @@ public class ProductServiceImpl implements ICreateProductService, IDeleteProduct
     }
 
     @Override
-    public ProductResponseDTO getProductById(Long id) {
+    public ProductResponseDTO getById(Long id) {
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()) {
             ProductResponseDTO productResponseDTO = convertUtils.convertToProductResponseDTO(product.get());
@@ -73,21 +99,5 @@ public class ProductServiceImpl implements ICreateProductService, IDeleteProduct
         if(productResponseDTOS.isEmpty())
             throw new EntityNotFoundException("No products found");
         return productResponseDTOS;
-    }
-
-    @Override
-    public ProductResponseDTO updateProduct(Long id, ProductRequestDTO productRequestDTO) {
-        Optional<Product> product = productRepository.findById(id);
-        if (product.isPresent()) {
-            Product productToUpdate = product.get();
-            productToUpdate.setName(productRequestDTO.getName());
-            productToUpdate.setDescription(productRequestDTO.getDescription());
-            productToUpdate.setPrice(productRequestDTO.getPrice());
-            productToUpdate.setQuantity(productRequestDTO.getQuantity());
-            productToUpdate = productRepository.save(productToUpdate);
-            ProductResponseDTO productResponseDTOToUpdate = convertUtils.convertToProductResponseDTO(productToUpdate);
-            return productResponseDTOToUpdate;
-        }
-        throw new EntityNotFoundException("Product with id: " + id + " not found");
     }
 }

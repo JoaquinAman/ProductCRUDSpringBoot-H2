@@ -3,11 +3,8 @@ package com.example.devtest.Controller;
 
 import com.example.devtest.DTO.Request.ProductRequestDTO;
 import com.example.devtest.DTO.Response.ProductResponseDTO;
-import com.example.devtest.Service.Abstraction.ICreateProductService;
-import com.example.devtest.Service.Abstraction.IDeleteProductService;
-import com.example.devtest.Service.Abstraction.IGetProductService;
-import com.example.devtest.Service.Abstraction.IUpdateProductService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.devtest.Service.Abstraction.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,25 +13,20 @@ import java.util.List;
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping("/product")
+@RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
-    private ICreateProductService createProductService;
-    @Autowired
-    private IGetProductService getProductService;
-    @Autowired
-    private IDeleteProductService deleteProductService;
-    @Autowired
-    private IUpdateProductService updateProductService;
+    private final ICRUDService crudService;
+    private final IGetProductService getProductService;
 
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productRequestDTO) {
-        ProductResponseDTO productResponseDTO = createProductService.createProduct(productRequestDTO);
+        ProductResponseDTO productResponseDTO = (ProductResponseDTO) crudService.create(productRequestDTO);
         return ResponseEntity.ok(productResponseDTO);
     }
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
-        ProductResponseDTO productResponseDTO = getProductService.getProductById(id);
+        ProductResponseDTO productResponseDTO = (ProductResponseDTO) crudService.getById(id);
         return ResponseEntity.ok(productResponseDTO);
     }
     @GetMapping("/name/{name}")
@@ -49,12 +41,12 @@ public class ProductController {
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        deleteProductService.deleteProductById(id);
+        crudService.deleteById(id);
         return ResponseEntity.ok().build();
     }
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> updateProduct(@PathVariable Long id, @RequestBody ProductRequestDTO productRequestDTO) {
-        ProductResponseDTO productResponseDTO = updateProductService.updateProduct(id, productRequestDTO);
+        ProductResponseDTO productResponseDTO = (ProductResponseDTO) crudService.update(id, productRequestDTO);
         return ResponseEntity.ok(productResponseDTO);
     }
 }

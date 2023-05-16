@@ -16,16 +16,6 @@ public class ConvertUtils {
         productResponseDTO.setQuantity(product.getQuantity());
         return productResponseDTO;
     }
-    public Product convertToProduct(ProductResponseDTO productResponseDTO) {
-        Product product = new Product();
-        product.setId(productResponseDTO.getId());
-        product.setName(productResponseDTO.getName());
-        product.setDescription(productResponseDTO.getDescription());
-        product.setPrice(productResponseDTO.getPrice());
-        product.setQuantity(productResponseDTO.getQuantity());
-        return product;
-    }
-
     public Product convertToProduct(ProductRequestDTO productRequestDTO) {
         Product product = new Product();
         product.setName(productRequestDTO.getName());
